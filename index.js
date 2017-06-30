@@ -7,47 +7,88 @@ app.get('/', function (req, res) {
   res.sendFile(__dirname + '/index.html');
 });
 
-app.get('/listRooms', function (req, res) {
-   fs.readFile( __dirname + "/" + "users.json", 'utf8', function (err, data) {
-       console.log( data );
-       res.end( data );
-   });
-});
+io.on('connection', function(socket) {
+    console.log('one user connected ' + socket.id);
 
-io.on('connection',function(socket){
-    console.log('one user connected '+socket.id);
+    function setResult(method, message, data) {
+        return JSON.stringify({ method: method, message: message, data: data });
+    };
 
-    socket.on('new message',function(data){
+    socket.on('create room', function (roomId) {
+
+        if (roomId !== undefined) {
+            socket.join(roomId);
+            io.sockets.in(roomId).emit('result', setResult("create-room", 'Sala criada - ' + roomId, null));
+        }
+    });
+
+
+    socket.on('join room', function (json) {
+
+        var data = JSON.parse(json);
+        if (data.roomId !== undefined && data.userName !== undefined) {
+
+            socket.join(data.roomId);
+            io.sockets.in(data.roomId).emit('result', setResult("join-room", data.userName + ' entrou na sala', socket.id));
+        }
+    });
+
+    socket.on("leave room", function (json) {
+
+        var data = JSON.parse(json);
+        if (data.roomId !== undefined && data.userName !== undefined) {
+
+            socket.leave(data.roomId);
+            io.sockets.in(data.roomId).emit('result', setResult("leave-room", data.userName + ' saiu da sala', null));
+        }
+    });
+
+    socket.on('start round', function (roomId) {
+
+        if (roomId !== undefined) {
+            io.sockets.in(roomId).emit('result', setResult("start-round", 'Rodada iniciada', null));
+        }
+    });
+
+    socket.on("chosen players", function (json) {
+
+        var data = JSON.parse(json);
+        if (data.roomId !== undefined && data.users !== undefined) {
+            io.sockets.in(data.roomId).emit('result', setResult("chosen-players", '', data.users));
+        }
+    });
+
+    socket.on("exit round", function (roomId) {
+
+        if (roomId !== undefined)
+            io.sockets.in(roomId).emit('result', setResult("exit-round", 'Saiu da rodada', null));
+    });
+
+    socket.on("send players list", function (json) {
+
+        var data = JSON.parse(json);
+        if (data.roomId !== undefined && data.users !== undefined) {
+            io.sockets.in(data.roomId).emit('result', setResult("send-players-list", '', data.users));
+        }
+    });
+
+    socket.on('send message', function (data) {
         var sockets = io.sockets.sockets;
-        /*sockets.forEach(function(sock){
-            if(sock.id != socket.id)
-            {
-                sock.emit('message',data);
-            }
-        })*/
-        var obj = JSON.parse(data);
- 		console.log(obj.username);
-        //console.log(data);
-        //console.log(socket.rooms);
-        socket.broadcast.emit('new message', obj);
+        socket.broadcast.to(data.roomId).emit('result', setResult("send-message", data.message, null));
     });
 
-    // handle incoming connections from clients
-	// once a client has connected, we expect to get a ping from them saying what room they want to join
-     // once a client has connected, we expect to get a ping from them saying what room they want to join
-    socket.on('room', function(room) {
-    	console.log('join room:' + room);
-        socket.join(room);
-      	var str = '{"username": "server","message": "just came into the room"}';
-       	console.log('send message: ' + str.username);
-       	var obj = JSON.parse(str);
-        io.sockets.in(room).emit('new message', obj);
+    socket.on('master disconnect', function (roomId) {
+
+        if (roomId !== undefined) {
+
+            io.sockets.in(roomId).emit('result', setResult("master-disconnect", "Líder desconectado", null));
+            console.log('master user disconnected ' + socket.id);
+        }
     });
 
-    socket.on('disconnect',function(){
+    socket.on('disconnect', function() {
         console.log('one user disconnected '+ socket.id);
     });
-
 });
 
 var port = process.env.PORT || 1337;

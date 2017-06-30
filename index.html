@@ -1,14 +1,96 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head lang="en">
     <meta charset="UTF-8">
     <title>Node Socket</title>
     <script src="/socket.io/socket.io.js"></script>
-    <script>
-        var socket = io();
-    </script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
 </head>
 <body>
 <h1>Hello Socket</h1>
+<br />
+<button id="CreateRoom">CreateRoom</button>
+<button id="JoinRoom">JoinRoom</button>
+<button id="LeaveRoom">LeaveRoom</button>
+<button id="ListPlayers">ListPlayers</button>
+<button id="StartRound">StartRound</button>
+<button id="ChosenPlayers">ChosenPlayers</button>
+<button id="ExitRound">ExitRound</button>
+
+<script type="text/javascript">
+    var socket = io();
+    var roomId = 0;
+    var userId = 0;
+    var socketId = "";
+
+    socket.on('result', function (json) {
+        console.log(json);
+
+        var obj = JSON.parse(json);
+
+        switch (obj.method) {
+            case "join room": socketId: obj.data; break;
+        }
+    });    
+
+    $(document).on("click", "#CreateRoom", function () {
+        roomId += 1;
+        socket.emit('create room', roomId);
+    });
+
+    $(document).on("click", "#JoinRoom", function () {
+        userId += 1;
+        var obj = {
+            roomId: roomId,
+            userId: userId,
+            userName: "Arthur Luis " + roomId
+        };
+
+        socket.emit('join room', JSON.stringify(obj));
+    });
+
+    $(document).on("click", "#LeaveRoom", function () {
+        var obj = {
+            roomId: roomId,
+            userId: 95,
+            userName: "Arthur Luis " + roomId
+        };
+
+        socket.emit('leave room', JSON.stringify(obj));
+    });
+
+    $(document).on("click", "#ListPlayers", function () {
+        var obj = {
+            roomId: roomId,
+            socketId: socketId,
+            users: [
+                { userId: 95, userName: "Arthur Luis " + roomId },
+                { userId: 96, userName: "Rodolfo Luis " + roomId }
+            ]
+        };
+
+        socket.emit('send players list', JSON.stringify(obj));
+    });
+
+    $(document).on("click", "#StartRound", function () {
+        socket.emit('start round', roomId);
+    });
+
+    $(document).on("click", "#ChosenPlayers", function () {
+        var obj = {
+            roomId: roomId,
+            users: [
+                { userId: 95, userName: "Arthur Luis " + roomId },
+                { userId: 96, userName: "Rodolfo Luis " + roomId }
+            ]
+        };
+
+        socket.emit('chosen players', JSON.stringify(obj));
+    });
+
+    $(document).on("click", "#ExitRound", function () {
+        socket.emit('exit round', roomId);
+    });
+</script>
 </body>
 </html>
