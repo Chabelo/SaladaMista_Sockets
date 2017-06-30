@@ -40,15 +40,9 @@
 
     $(document).on("click", "#JoinRoom", function () {
         userId += 1;
-        var obj = {
-            roomId: roomId,
-            user: {
-                userId: userId,
-                userName: "Arthur Luis " + roomId
-            }            
-        };
+        var json = {"user":{"userId":15,"userName":"Pedro Gonzales","userPicture":"https://scontent.xx.fbcdn.net/v/t1.0-1/p200x200/12573800_866036850180579_5956766789530090093_n.jpg?oh\u003d6aafc707ea708f317a9884ee6c933fc5\u0026oe\u003d59D57C49"},"roomId":"96"};
 
-        socket.emit('join room', JSON.stringify(obj));
+        socket.emit('join room', JSON.stringify(json));
     });
 
     $(document).on("click", "#LeaveRoom", function () {

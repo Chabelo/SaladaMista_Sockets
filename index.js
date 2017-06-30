@@ -22,14 +22,13 @@ io.on('connection', function(socket) {
         }
     });
 
-
     socket.on('join room', function (json) {
 
         var data = JSON.parse(json);
-        if (data !== undefined && data.roomId !== undefined && data.user !== undefined) {
+        if (data !== undefined && data.roomId !== undefined) {
 
             socket.join(data.roomId);
-            io.sockets.in(data.roomId).emit('result', setResult("join-room", data.user.userName + ' entrou na sala', socket.id));
+            io.sockets.in(data.roomId).emit('result', setResult("join-room", data.user.userName + ' entrou na sala', data.user));
         }
     });
 
@@ -39,7 +38,7 @@ io.on('connection', function(socket) {
         if (data !== undefined && data.roomId !== undefined && data.user !== undefined) {
 
             socket.leave(data.roomId);
-            io.sockets.in(data.roomId).emit('result', setResult("leave-room", data.user.userName + ' saiu da sala', null));
+            io.sockets.in(data.roomId).emit('result', setResult("leave-room", data.user.userName + ' saiu da sala', data.user));
         }
     });
 
@@ -62,6 +61,12 @@ io.on('connection', function(socket) {
 
         if (roomId !== undefined)
             io.sockets.in(roomId).emit('result', setResult("exit-round", 'Saiu da rodada', null));
+    });
+
+    socket.on("get players list", function (masterSocketId) {
+
+        if (masterSocketId !== undefined)
+            socket.to(masterSocketId).emit('result', setResult("get-players-list", null, null));
     });
 
     socket.on("send players list", function (json) {
@@ -88,6 +93,11 @@ io.on('connection', function(socket) {
 
     socket.on('disconnect', function() {
         console.log('one user disconnected '+ socket.id);
+    });
+
+    socket.on('error', (error) => {
+
+        console.log(error);
     });
 });
 
