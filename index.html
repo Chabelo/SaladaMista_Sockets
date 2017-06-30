@@ -42,8 +42,10 @@
         userId += 1;
         var obj = {
             roomId: roomId,
-            userId: userId,
-            userName: "Arthur Luis " + roomId
+            user: {
+                userId: userId,
+                userName: "Arthur Luis " + roomId
+            }            
         };
 
         socket.emit('join room', JSON.stringify(obj));
@@ -52,8 +54,10 @@
     $(document).on("click", "#LeaveRoom", function () {
         var obj = {
             roomId: roomId,
-            userId: 95,
-            userName: "Arthur Luis " + roomId
+            user: {
+                userId: userId,
+                userName: "Arthur Luis " + roomId
+            }
         };
 
         socket.emit('leave room', JSON.stringify(obj));

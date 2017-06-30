@@ -26,20 +26,20 @@ io.on('connection', function(socket) {
     socket.on('join room', function (json) {
 
         var data = JSON.parse(json);
-        if (data.roomId !== undefined && data.userName !== undefined) {
+        if (data !== undefined && data.roomId !== undefined && data.user !== undefined) {
 
             socket.join(data.roomId);
-            io.sockets.in(data.roomId).emit('result', setResult("join-room", data.userName + ' entrou na sala', socket.id));
+            io.sockets.in(data.roomId).emit('result', setResult("join-room", data.user.userName + ' entrou na sala', socket.id));
         }
     });
 
     socket.on("leave room", function (json) {
 
         var data = JSON.parse(json);
-        if (data.roomId !== undefined && data.userName !== undefined) {
+        if (data !== undefined && data.roomId !== undefined && data.user !== undefined) {
 
             socket.leave(data.roomId);
-            io.sockets.in(data.roomId).emit('result', setResult("leave-room", data.userName + ' saiu da sala', null));
+            io.sockets.in(data.roomId).emit('result', setResult("leave-room", data.user.userName + ' saiu da sala', null));
         }
     });
 
@@ -53,7 +53,7 @@ io.on('connection', function(socket) {
     socket.on("chosen players", function (json) {
 
         var data = JSON.parse(json);
-        if (data.roomId !== undefined && data.users !== undefined) {
+        if (data !== undefined && data.roomId !== undefined && data.users !== undefined) {
             io.sockets.in(data.roomId).emit('result', setResult("chosen-players", '', data.users));
         }
     });
@@ -67,7 +67,7 @@ io.on('connection', function(socket) {
     socket.on("send players list", function (json) {
 
         var data = JSON.parse(json);
-        if (data.roomId !== undefined && data.users !== undefined) {
+        if (data !== undefined && data.roomId !== undefined && data.users !== undefined) {
             io.sockets.in(data.roomId).emit('result', setResult("send-players-list", '', data.users));
         }
     });
