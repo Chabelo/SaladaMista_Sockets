@@ -28,7 +28,7 @@ io.on('connection', function(socket) {
         if (data !== undefined && data.roomId !== undefined) {
 
             socket.join(data.roomId);
-            io.sockets.in(data.roomId).emit('result', setResult("join-room", data.user.userName + ' entrou na sala', data.user));
+            io.sockets.in(data.roomId).emit('result', setResult("join-room", data.user.userName + ' entrou na sala', JSON.stringify(data.user)));
         }
     });
 
@@ -38,7 +38,7 @@ io.on('connection', function(socket) {
         if (data !== undefined && data.roomId !== undefined && data.user !== undefined) {
 
             socket.leave(data.roomId);
-            io.sockets.in(data.roomId).emit('result', setResult("leave-room", data.user.userName + ' saiu da sala', data.user));
+            io.sockets.in(data.roomId).emit('result', setResult("leave-room", data.user.userName + ' saiu da sala', JSON.stringify(data.user)));
         }
     });
 
@@ -53,7 +53,7 @@ io.on('connection', function(socket) {
 
         var data = JSON.parse(json);
         if (data !== undefined && data.roomId !== undefined && data.users !== undefined) {
-            io.sockets.in(data.roomId).emit('result', setResult("chosen-players", '', data.users));
+            io.sockets.in(data.roomId).emit('result', setResult("chosen-players", '', JSON.stringify(data.users)));
         }
     });
 
@@ -73,7 +73,7 @@ io.on('connection', function(socket) {
 
         var data = JSON.parse(json);
         if (data !== undefined && data.roomId !== undefined && data.users !== undefined) {
-            io.sockets.in(data.roomId).emit('result', setResult("send-players-list", '', data.users));
+            io.sockets.in(data.roomId).emit('result', setResult("send-players-list", '', JSON.stringify(data.users)));
         }
     });
 
