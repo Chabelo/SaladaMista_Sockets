@@ -78,9 +78,15 @@ io.on('connection', function(socket) {
         }
     });
 
-    socket.on('send message', function (data) {
-        var sockets = io.sockets.sockets;
-        socket.broadcast.to(data.roomId).emit('result', setResult("send-message", data.message, null));
+    socket.on('send message', function (json) {
+
+        var data = JSON.parse(json);
+
+        console.log('message ' + data);
+        if (data !== undefined && data.roomId !== undefined) {
+            console.log('message received ' + data.message);
+            io.sockets.in(data.roomId).emit('result', setResult("send-message", data.message, null));
+        }
     });
 
     socket.on('master disconnect', function (roomId) {
