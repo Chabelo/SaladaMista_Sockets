@@ -7,7 +7,8 @@
   "author": "Leg Studios",
   "dependencies": {
     "express": "^4.15.2",
-    "socket.io": "^1.7.3"
+    "socket.io": "^1.7.3",
+    "collectionsjs": "^0.3.2" 
   },
   "scripts": {
     "start": "node index.js"
