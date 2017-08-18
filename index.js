@@ -37,8 +37,8 @@ function randexec(probas) {
 
 
 function setRoomOperation(roomId, operation) {
-	var room = JSON.parse(rooms.get(roomId));
-	rooms.set(roomId, "{\"operation\": " + operation + ", \"masterId\": \""+ room.masterId + "\"}");
+	var room = JSON.parse(rooms.get(roomId.toString()));
+	rooms.set(roomId.toString(), "{\"operation\": " + operation + ", \"masterId\": \""+ room.masterId + "\"}");
 }
 
 io.on('connection', function(socket) {
@@ -53,7 +53,7 @@ io.on('connection', function(socket) {
 
         if (roomId !== undefined) {
 			console.log('room created with id ' + roomId);
-			rooms.add("{\"operation\": 0, \"masterId\": \""+ socket.id + "\"}", roomId);
+			rooms.add("{\"operation\": 0, \"masterId\": \""+ socket.id + "\"}", roomId.toString());
 			
             socket.join(roomId);
             io.sockets.in(roomId).emit('result', setResult("create-room", 'Sala criada - ' + roomId, null));
@@ -62,6 +62,7 @@ io.on('connection', function(socket) {
 
     socket.on('join room', function (json) {
         var data = JSON.parse(json);
+		console.log("data received " + data)
         if (data !== undefined && data.roomId !== undefined) {
 			console.log('user ' + socket.id + ' entered room with id ' + data.roomId + ', with probability ' + rooms.get(data.roomId));
             socket.join(data.roomId);
@@ -73,7 +74,8 @@ io.on('connection', function(socket) {
 
         var data = JSON.parse(json);
         if (data !== undefined && data.roomId !== undefined && data.user !== undefined) {
-			  var room = JSON.parse(rooms.get(data.roomId));
+			var room = JSON.parse(rooms.get(data.roomId));
+			  
 			if (socket.id == room.masterId) {
 			  console.log('room ' + data.roomId + ' deleted from list');
 			  rooms.delete(data.roomId);
@@ -88,7 +90,7 @@ io.on('connection', function(socket) {
 
         if (roomId !== undefined) {
 			setTimeout(function () {
-				var room = JSON.parse(rooms.get(roomId));
+				var room = JSON.parse(rooms.get(roomId.toString()));
 				var probas = [];
 					   
 				switch (room.operation) {
@@ -134,9 +136,10 @@ io.on('connection', function(socket) {
     });
 
     socket.on("get players list", function (masterSocketId) {
-
-        if (masterSocketId !== undefined)
+		if (masterSocketId !== undefined) {
+			console.log('id received ' + masterSocketId)
             socket.to(masterSocketId).emit('result', setResult("get-players-list", null, null));
+		}
     });
 
     socket.on("send players list", function (json) {
@@ -175,7 +178,6 @@ io.on('connection', function(socket) {
     socket.on('master disconnect', function (roomId) {
 
         if (roomId !== undefined) {
-
             io.sockets.in(roomId).emit('result', setResult("master-disconnect", "Líder desconectado", null));
             console.log('master user disconnected ' + socket.id);
         }
