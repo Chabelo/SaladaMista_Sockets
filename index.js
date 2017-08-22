@@ -57,7 +57,10 @@ io.on('connection', function(socket) {
 			
             socket.join(roomId);
             io.sockets.in(roomId).emit('result', setResult("create-room", 'Sala criada - ' + roomId, null));
-        }
+		} else {
+			console.log('failed creating room with id ' + roomId);
+			socket.emit('result', setResult("failed-crete-room", 'Erro ao criar sala. Tente novamente mais tarde.', null))
+		}
     });
 
     socket.on('join room', function (json) {
@@ -116,7 +119,7 @@ io.on('connection', function(socket) {
 					   
 				io.sockets.in(roomId).emit('result', setResult("send-message", "selectedFruit: " + fruit, null));
 				setRoomOperation(roomId, 0);
-			}, 12000);
+			}, 12400);
             io.sockets.in(roomId).emit('result', setResult("start-round", 'Rodada iniciada', null));
         }
     });
