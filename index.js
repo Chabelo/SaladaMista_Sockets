@@ -186,7 +186,7 @@ io.on('connection', function(socket) {
         }
     });
 
-    socket.on('disconnect', function() {
+     socket.on('disconnect', function() {
         console.log('one user disconnected '+ socket.id);
     });
 
