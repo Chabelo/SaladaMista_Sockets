@@ -41,7 +41,19 @@ function setRoomOperation(roomId, operation) {
 	rooms.set(roomId.toString(), "{\"operation\": " + operation + ", \"masterId\": \""+ room.masterId + "\"}");
 }
 
-io.on('connection', function(socket) {
+function logError(fileName, ex) {
+
+    fs.writeFile("log_errors/" + fileName + ".txt", ex, function (err) {
+        if (err) {
+            return console.log(err);
+        }
+
+        console.log("The file was saved!");
+    });
+}
+
+io.on('connection', function (socket) {
+
     console.log('one user connected ' + socket.id);
 
 	function setResult(method, message, data) {
@@ -51,139 +63,205 @@ io.on('connection', function(socket) {
 
     socket.on('create room', function (roomId) {
 
-        if (roomId !== undefined) {
-			console.log('room created with id ' + roomId);
-			rooms.add("{\"operation\": 0, \"masterId\": \""+ socket.id + "\"}", roomId.toString());
+        try {
+            if (roomId !== undefined) {
+                console.log('room created with id ' + roomId);
+                rooms.add("{\"operation\": 0, \"masterId\": \""+ socket.id + "\"}", roomId.toString());
 			
-            socket.join(roomId);
-            io.sockets.in(roomId).emit('result', setResult("create-room", 'Sala criada - ' + roomId, null));
-		} else {
-			console.log('failed creating room with id ' + roomId);
-			socket.emit('result', setResult("failed-crete-room", 'Erro ao criar sala. Tente novamente mais tarde.', null))
-		}
+                socket.join(roomId);
+                io.sockets.in(roomId).emit('result', setResult("create-room", 'Sala criada - ' + roomId, null));
+            } else {
+                console.log('failed creating room with id ' + roomId);
+                socket.emit('result', setResult("failed-crete-room", 'Erro ao criar sala. Tente novamente mais tarde.', null))
+            }
+        }
+        catch (ex) {
+            logError("create_room", ex);
+        }        
     });
 
     socket.on('join room', function (json) {
-        var data = JSON.parse(json);
-		console.log("data received " + data)
-        if (data !== undefined && data.roomId !== undefined) {
-			console.log('user ' + socket.id + ' entered room with id ' + data.roomId + ', with probability ' + rooms.get(data.roomId));
-            socket.join(data.roomId);
-            io.sockets.in(data.roomId).emit('result', setResult("join-room", data.user.userName + ' entrou na sala', JSON.stringify(data.user)));
+
+        try {
+            var data = JSON.parse(json);
+            console.log("data received " + data)
+            if (data !== undefined && data.roomId !== undefined) {
+                console.log('user ' + socket.id + ' entered room with id ' + data.roomId + ', with probability ' + rooms.get(data.roomId));
+                socket.join(data.roomId);
+                io.sockets.in(data.roomId).emit('result', setResult("join-room", data.user.userName + ' entrou na sala', JSON.stringify(data.user)));
+            }
+        }
+        catch (ex) {
+            logError("join_room", ex);
         }
     });
 
     socket.on("leave room", function (json) {
 
-        var data = JSON.parse(json);
-        if (data !== undefined && data.roomId !== undefined && data.user !== undefined) {
-            //var room = JSON.parse(rooms.get(data.roomId));
-            var room = rooms.get(data.roomId);
+        try {
+
+            var data = JSON.parse(json);
+            if (data !== undefined && data.roomId !== undefined && data.user !== undefined) {
+                var room = rooms.get(data.roomId);
 			  
-			if (socket.id == room.masterId) {
-			  console.log('room ' + data.roomId + ' deleted from list');
-			  rooms.delete(data.roomId);
-			}
+                console.log(room);
+
+                if (socket.id == room.masterId) {
+                    console.log('room ' + data.roomId + ' deleted from list');
+                    rooms.delete(data.roomId);
+                }
 			  
-            socket.leave(data.roomId);
-            io.sockets.in(data.roomId).emit('result', setResult("leave-room", data.user.userName + ' saiu da sala', JSON.stringify(data.user)));
+                console.log("opa");
+
+                socket.leave(data.roomId);
+                io.sockets.in(data.roomId).emit('result', setResult("leave-room", data.user.userName + ' saiu da sala', JSON.stringify(data.user)));
+            }
+        }
+        catch (ex) {
+
+            logError("leave_room", ex);
         }
     });
 
     socket.on('start round', function (roomId) {
 
-        if (roomId !== undefined) {
-			setTimeout(function () {
-				var room = JSON.parse(rooms.get(roomId.toString()));
-				var probas = [];
+        try {
+            if (roomId !== undefined) {
+                setTimeout(function () {
+                    var room = JSON.parse(rooms.get(roomId.toString()));
+                    var probas = [];
 					   
-				switch (room.operation) {
-					case 0:
-					   probas = [0, 50, 30, 20];
-					   break;
-					case 1:
-					   probas = [100, 0, 0, 0];
-					   break;
-					case 2:
-					   probas = [100, 0, 0, 0];
-					   break;
-					case 3:
-					   probas = [0, 70, 20, 10];
-					   break;
-					case 4:
-					   probas = [0, 50, 30, 20];
-					   break;
-				}
-				var fruit = randexec(probas);
+                    switch (room.operation) {
+                        case 0:
+                            probas = [0, 50, 30, 20];
+                            break;
+                        case 1:
+                            probas = [100, 0, 0, 0];
+                            break;
+                        case 2:
+                            probas = [100, 0, 0, 0];
+                            break;
+                        case 3:
+                            probas = [0, 70, 20, 10];
+                            break;
+                        case 4:
+                            probas = [0, 50, 30, 20];
+                            break;
+                    }
+                    var fruit = randexec(probas);
 				
-				console.log('sorted fruit ' + fruit + ' in room with id ' + roomId);
+                    console.log('sorted fruit ' + fruit + ' in room with id ' + roomId);
 					   
-				io.sockets.in(roomId).emit('result', setResult("send-message", "selectedFruit: " + fruit, null));
-				setRoomOperation(roomId, 0);
-			}, 12400);
-            io.sockets.in(roomId).emit('result', setResult("start-round", 'Rodada iniciada', null));
+                    io.sockets.in(roomId).emit('result', setResult("send-message", "selectedFruit: " + fruit, null));
+                    setRoomOperation(roomId, 0);
+                }, 12400);
+                io.sockets.in(roomId).emit('result', setResult("start-round", 'Rodada iniciada', null));
+            }
+        }
+        catch (ex) {
+            logError("start_round", ex);
         }
     });
 
     socket.on("chosen players", function (json) {
 
-        var data = JSON.parse(json);
-        if (data !== undefined && data.roomId !== undefined && data.users !== undefined) {
-            io.sockets.in(data.roomId).emit('result', setResult("chosen-players", '', JSON.stringify(data.users)));
+        try {
+            var data = JSON.parse(json);
+            if (data !== undefined && data.roomId !== undefined && data.users !== undefined) {
+                io.sockets.in(data.roomId).emit('result', setResult("chosen-players", '', JSON.stringify(data.users)));
+            }
+        }
+        catch (ex) {
+            logError("chosen_players", ex);
         }
     });
 
     socket.on("exit round", function (roomId) {
 
-        if (roomId !== undefined)
-            io.sockets.in(roomId).emit('result', setResult("exit-round", 'Saiu da rodada', null));
+        try {
+            if (roomId !== undefined)
+                io.sockets.in(roomId).emit('result', setResult("exit-round", 'Saiu da rodada', null));
+        }
+        catch (ex) {
+            logError("exit_round", ex);
+        }
     });
 
     socket.on("get players list", function (masterSocketId) {
-		if (masterSocketId !== undefined) {
-			console.log('id received ' + masterSocketId)
-            socket.to(masterSocketId).emit('result', setResult("get-players-list", null, null));
-		}
+
+        try {
+            if (masterSocketId !== undefined) {
+                console.log('id received ' + masterSocketId)
+                socket.to(masterSocketId).emit('result', setResult("get-players-list", null, null));
+            }
+        }
+        catch (ex) {
+            logError("get_players_list", ex);
+        }
     });
 
     socket.on("send players list", function (json) {
 
-        var data = JSON.parse(json);
-        if (data !== undefined && data.roomId !== undefined && data.users !== undefined) {
-            io.sockets.in(data.roomId).emit('result', setResult("send-players-list", '', JSON.stringify(data.users)));
+        try {
+
+            var data = JSON.parse(json);
+            if (data !== undefined && data.roomId !== undefined && data.users !== undefined) {
+                io.sockets.in(data.roomId).emit('result', setResult("send-players-list", '', JSON.stringify(data.users)));
+            }
+        }
+        catch (ex) {
+            logError("send_players_list", ex);
         }
     });
 
     socket.on('send message', function (json) {
+			
+        try {
+            var data = JSON.parse(json);
 			  
-		var data = JSON.parse(json);
-			  
-		console.log('message ' + data);
-		if (data !== undefined && data.roomId !== undefined) {
-			console.log('message received ' + data.message);
-			io.sockets.in(data.roomId).emit('result', setResult("send-message", data.message, null));
-		}
+            console.log('message ' + data);
+            if (data !== undefined && data.roomId !== undefined) {
+                console.log('message received ' + data.message);
+                io.sockets.in(data.roomId).emit('result', setResult("send-message", data.message, null));
+            }
+        }
+        catch (ex) {
+            logError("send_message", ex);
+        }
     });
 
 	socket.on('fruit probability', function (json) {
-		// Json - {roomId: 0, operation: 0}
-		var data = JSON.parse(json);
-		console.log('received operation ' + data.operation + ' from room with id ' + data.roomId);
-		// Operation:
-		// Case 1 - Tentou
-		// Case 3 - Bloqueou
-		if (data.roomId !== undefined && data.operation !== undefined) {
-			var room = JSON.parse(rooms.get(data.roomId));
-			var operation = parseInt(room.operation) + parseInt(data.operation);
-			setRoomOperation(data.roomId, operation);
-		}
+
+	    try {
+	       
+	        // Json - {roomId: 0, operation: 0}
+	        var data = JSON.parse(json);
+	        console.log('received operation ' + data.operation + ' from room with id ' + data.roomId);
+	        // Operation:
+	        // Case 1 - Tentou
+	        // Case 3 - Bloqueou
+	        if (data.roomId !== undefined && data.operation !== undefined) {
+	            var room = JSON.parse(rooms.get(data.roomId));
+	            var operation = parseInt(room.operation) + parseInt(data.operation);
+	            setRoomOperation(data.roomId, operation);
+	        }
+	    }
+	    catch (ex) {
+	        logError("fruit_probability", ex);
+	    }
     });
 	  
     socket.on('master disconnect', function (roomId) {
 
-        if (roomId !== undefined) {
-            io.sockets.in(roomId).emit('result', setResult("master-disconnect", "Líder desconectado", null));
-            console.log('master user disconnected ' + socket.id);
+        try {
+
+            if (roomId !== undefined) {
+                io.sockets.in(roomId).emit('result', setResult("master-disconnect", "Líder desconectado", null));
+                console.log('master user disconnected ' + socket.id);
+            }
+        }
+        catch (ex) {
+            logError("master_disconnect", ex);
         }
     });
 
@@ -191,28 +269,15 @@ io.on('connection', function(socket) {
         console.log('one user disconnected '+ socket.id);
     });
 
-    socket.on('pau', function () {
-
-        fs.writeFile("/tmp/test", "Hey there!", function (err) {
-            if (err) {
-                return console.log(err);
-            }
-
-            console.log("The file was saved!");
-        });
-    });
-
     socket.on('error', (error) => {
 
-        fs.writeFile("/tmp/test", "Hey there!", function (err) {
+        fs.writeFile("log_errors/error_socket.txt", error, function (err) {
             if (err) {
                 return console.log(err);
             }
 
             console.log("The file was saved!");
         });
-
-        socket.emit('exception', { errorMessage: error });
 
         console.log(error);
     });
