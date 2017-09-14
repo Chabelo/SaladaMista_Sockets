@@ -186,8 +186,19 @@ io.on('connection', function(socket) {
         }
     });
 
-     socket.on('disconnect', function() {
+    socket.on('disconnect', function() {
         console.log('one user disconnected '+ socket.id);
+    });
+
+    socket.on('pau', function () {
+
+        fs.writeFile("/tmp/test", "Hey there!", function (err) {
+            if (err) {
+                return console.log(err);
+            }
+
+            console.log("The file was saved!");
+        });
     });
 
     socket.on('error', (error) => {
