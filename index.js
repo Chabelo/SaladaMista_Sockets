@@ -77,7 +77,8 @@ io.on('connection', function(socket) {
 
         var data = JSON.parse(json);
         if (data !== undefined && data.roomId !== undefined && data.user !== undefined) {
-			var room = JSON.parse(rooms.get(data.roomId));
+            //var room = JSON.parse(rooms.get(data.roomId));
+            var room = rooms.get(data.roomId);
 			  
 			if (socket.id == room.masterId) {
 			  console.log('room ' + data.roomId + ' deleted from list');
