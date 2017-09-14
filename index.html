@@ -14,7 +14,6 @@
 <button id="StartRound">StartRound</button>
 <button id="ChosenPlayers">ChosenPlayers</button>
 <button id="ExitRound">ExitRound</button>
-<button id="Pau">Pau</button>
 
 <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
 <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
@@ -37,11 +36,6 @@
     $(document).on("click", "#CreateRoom", function () {
         roomId += 1;
         socket.emit('create room', roomId);
-    });
-
-    $(document).on("click", "#Pau", function () {
-
-        socket.emit('pau');
     });
 
     $(document).on("click", "#JoinRoom", function () {
