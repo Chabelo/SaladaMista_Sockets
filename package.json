@@ -6,9 +6,9 @@
   "license": "MIT",
   "author": "Leg Studios",
   "dependencies": {
+    "collections": "^5.0.7",
     "express": "^4.15.2",
-    "socket.io": "^1.7.3",
-    "collections": "^5.0.6"
+    "socket.io": "^1.7.3"
   },
   "scripts": {
     "start": "node index.js"
