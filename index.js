@@ -211,6 +211,8 @@ io.on('connection', function(socket) {
             console.log("The file was saved!");
         });
 
+        socket.emit('exception', { errorMessage: error });
+
         console.log(error);
     });
 });
